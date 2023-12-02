@@ -59,4 +59,4 @@ input     = IO.stream(:stdio, :line)
 constrain = %{"red" => 12, "green" => 13, "blue" => 14}
 result    = D02.run(input, constrain)
 
-IO.puts("#{ IO.inspect result }")
+IO.puts(result)

@@ -57,4 +57,4 @@ alias AOC23.D02
 input     = IO.stream(:stdio, :line)
 result    = D02.run(input)
 
-IO.puts("#{ IO.inspect result }")
+IO.puts(result)

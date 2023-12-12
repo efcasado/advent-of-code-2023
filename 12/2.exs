@@ -13,40 +13,46 @@ defmodule AOC23.D12 do
 
       {rec, sol}
     end)
-    |> Enum.map(fn({rec, sol}) ->
-      expand(rec, sol)
-      |> Enum.count
+    |> Enum.reduce(0, fn({rec, sol}, acc) ->
+    # |> pmap(fn({rec, sol}) ->
+      IO.puts "XXX"
+      acc + expand(rec, sol)
     end)
-    |> Enum.sum
   end
 
-  def expand(xs, _sol, prev \\ nil, n \\ 0, acc \\ [[]])
+  # def pmap(collection, f) do
+  #   collection
+  #   |> Task.async_stream(&f.(&1), max_concurrency: 4, timeout: :infinity)
+  #   |> Enum.map(fn({:ok, res}) -> res end)
+  # end
+
+  def expand(xs, _sol, prev \\ nil, n \\ 0, acc \\ 1)
 
   def expand([],  [], _prev, _n, acc),
-    do: Enum.map(acc, &Enum.reverse/1)
+    do: acc
   def expand([], [s],   "#",  n, acc) when n == s,
-    do: Enum.map(acc, &Enum.reverse/1)
+    do: acc
 
-  def expand(       [],      _,     _,   _,   _),             do: []
-  def expand(["#"|  _],     [], _prev, _n, _acc),             do: []
-  def expand(      _xs, [s| _], _prev,  n, _acc) when n > s,  do: []
-  def expand(["#"|  _], [s| _], _prev,  n, _acc) when n == s, do: []
-  def expand(["."|  _], [s| _],   "#",  n, _acc) when n < s,  do: []
+  def expand(       [],      _,     _,   _,   _),             do: 0
+  def expand(["#"|  _],     [], _prev, _n, _acc),             do: 0
+  def expand(      _xs, [s| _], _prev,  n, _acc) when n > s,  do: 0
+  def expand(["#"|  _], [s| _], _prev,  n, _acc) when n == s, do: 0
+  def expand(["."|  _], [s| _],   "#",  n, _acc) when n < s,  do: 0
 
-  def expand(["?"| xs], [s| _s] = sol, prev, n, acc0) when n >= s,
-    do: expand(["."| xs], sol, prev, n, acc0)
-  def expand(["?"| xs], sol, prev, n, acc0),
-    do: expand(["."| xs], sol, prev, n, acc0) ++ expand(["#"| xs], sol, prev, n, acc0)
-  def expand(["."| xs], [_| sol], "#", _n, acc0),
-    do: expand(xs, sol, ".", 0, Enum.map(acc0, fn(a) -> ["."| a] end))
-  def expand(["."| xs], sol, _, _n, acc0),
-    do: expand(xs, sol, ".", 0, Enum.map(acc0, fn(a) -> ["."| a] end))
-  def expand(["#"| xs], sol, _prev, n, acc0),
-    do: expand(xs, sol, "#", n + 1, Enum.map(acc0, fn(a) -> ["#"| a] end))
+  def expand(["?"| xs], [s| _s] = sol, prev, n, acc) when n >= s,
+    do: expand(["."| xs], sol, prev, n, acc)
+  def expand(["?"| xs], sol, prev, n, acc),
+    do: expand(["."| xs], sol, prev, n, acc) + expand(["#"| xs], sol, prev, n, acc)
+  def expand(["."| xs], [_| sol], "#", _n, acc),
+    do: expand(xs, sol, ".", 0, acc)
+  def expand(["."| xs], sol, _, _n, acc),
+    do: expand(xs, sol, ".", 0, acc)
+  def expand(["#"| xs], sol, _prev, n, acc),
+    do: expand(xs, sol, "#", n + 1, acc)
 end
 
 
 input     = IO.stream(:stdio, :line)
-result    = AOC23.D12.run(input, 5)
+result    = AOC23.D12.run(input, 1)
 
 IO.puts(result)

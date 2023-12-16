@@ -8,7 +8,7 @@ defmodule AOC23.D16 do
     {size, m} = parse(input)
 
     starts(size)
-    |> Enum.map(fn(s) ->
+    |> pmap(fn(s) ->
       traverse(m, [s])
       |> Enum.map(fn({p, _d}) -> p end)
       |> Enum.uniq
@@ -35,6 +35,11 @@ defmodule AOC23.D16 do
       true  -> traverse(m, xs, trail)
       false -> traverse(m, next(m, p, d) ++ xs, [x| trail])
     end
+  end
+
+  def pmap(xs, fun) do
+    Task.async_stream(xs, fn(x) -> fun.(x) end, timeout: :infinity)
+    |> Enum.map(fn({:ok, res}) -> res end)
   end
 
   def visited?(xs, x), do: Enum.member?(xs, x)

@@ -8,7 +8,6 @@ defmodule AOC23.D17 do
   def run(input) do
     {size, g} =
       parse(input)
-      # |> IO.inspect(limit: :infinity)
     
     s = source(size)
     t = target(size)
@@ -25,8 +24,8 @@ defmodule AOC23.D17 do
   end
 
   def distances(g, t, q0, seen) do
-    {{w, {u, cons}}, q} = min(q0)
-    case t == u do
+    {{w, {u, {steps, _} = cons}}, q} = min(q0)
+    case steps >= 4 and t == u do
       true ->
         w
       false ->
@@ -52,18 +51,25 @@ defmodule AOC23.D17 do
   def neighbors(g, u, {steps, dir} = _cons) do
     Enum.flat_map(@directions, fn(new_dir) ->
       new_pos = vadd(u, new_dir)
+
       cond do
         Map.get(g, new_pos) === nil ->
+          # reject out of range
           []
-        dir === new_dir ->
+        dir == new_dir ->
+          # same direction
           [{new_pos, {steps + 1, new_dir}}]
-        r180(new_dir) === dir ->
+        r180(new_dir) == dir ->
+          # reject reverse
           []
-        true ->
+        steps == 0 or steps >= 4 ->
+          # change direction
           [{new_pos, {1, new_dir}}]
+        true ->
+          []
       end
     end)
-    |> Enum.reject(fn({_v, {steps, _dir}}) -> steps > 3 end)
+    |> Enum.reject(fn({_v, {steps, _dir}}) -> steps > 10 end)
   end
   
   def source({{i, _}, {j, _}}), do: {i, j}
@@ -79,27 +85,21 @@ defmodule AOC23.D17 do
         {{i + 1, j}, r ++ rs}
       end)
 
-    m0 = Map.new(rs)
-    # m1 = Map.new(Enum.map(m0, fn({k, {w, ns}}) -> {k, {w, Enum.filter(ns, &(validn?(m0, &1)))}} end))
+    m = Map.new(rs)
     
-    {{{1, i - 1}, {1, j}}, m0}
+    {{{1, i - 1}, {1, j}}, m}
   end
 
   def l2cs(line, n) do
     line
     |> String.trim
     |> String.split("", trim: true)
-    # |> Enum.with_index(fn(e, idx) -> {{n, idx + 1}, {String.to_integer(e), neighbors({n, idx + 1})}} end)
     |> Enum.with_index(fn(e, idx) -> {{n, idx + 1}, String.to_integer(e)} end)
   end
-
-  # def neighbors(p), do: Enum.map([@up, @down, @left, @right], &({&1, vadd(p, &1)}))
 
   def vadd({i1, j1}, {i2, j2}), do: {i1 + i2, j1 + j2}
 
   def r180({i, j}), do: {-i, -j}
-  
-  # def validn?(m, {_, n}), do: Map.get(m, n, nil) != nil
 end
 
 

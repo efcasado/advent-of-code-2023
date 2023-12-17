@@ -4,6 +4,8 @@ defmodule AOC23.D17 do
   @left  { 0, -1}
   @right { 0,  1}
 
+  @directions [@up, @down, @left, @right]
+  
   def run(input) do
     {size, g} =
       parse(input)
@@ -33,21 +35,21 @@ defmodule AOC23.D17 do
   
   def distances(g, from, to) do
     # TODO: Initialize steps and direction
-    distances(g, to, [{from, 0, {3, {0, 0}}, {0, 0}}], %{from => 0}, %{})
+    distances(g, to, :gb_sets.singleton({0, {from, {3, {0, 0}}, {0, 0}}}), %{from => 0}, %{})
   end
 
   def distances(_g, _t, [], dist, prev) do
     {dist, prev}
   end
   def distances(g, t, q0, dist, prev) do
-    {{u, _w, cons, _from}, q} = min(q0)
+    {{_w, {u, cons, _from}}, q} = min(q0)
     #|> IO.inspect
     #IO.puts "u=#{inspect u}"
     
-    #case t == u do
-    #  true ->
-    #    {dist, prev}
-    #  false ->
+    case t == u do
+      true ->
+        {dist, prev}
+      false ->
         ns = neighbors(g, u, cons)
         {dist1, prev1, q1} =
           Enum.reduce(ns, {dist, prev, q},
@@ -61,29 +63,16 @@ defmodule AOC23.D17 do
               end
             end)
         distances(g, t, q1, dist1, prev1)
-    #end
+    end
   end
 
   def min(q) do
-    # TODO: Use proper priority queue
-    #IO.puts "Q | q=#{inspect q}"
-    # fetch the element with the minimum weight
-    u = Enum.min(q, fn({_, w1, _, _}, {_, w2, _, _}) -> w1 <= w2 end)
-    {e, _, _, _} = u
-    #IO.puts "Q | min=#{inspect e}"
-    {u, q -- [u]}
+    :gb_sets.take_smallest(q)
   end
 
   # node = pos, weight, constraint, prev pos
-  def addwp(q, {v1, _w, _cons, _u} = e1) do
-    #IO.puts "adding #{inspect v1} to #{inspect q}"
-    # TODO: Use proper priority queue
-    case Enum.any?(q, fn({v0, _, _, _}) -> v1 == v0 end) do
-      true  ->
-        Enum.map(q, fn({^v1, _, _, _} = e0) -> IO.puts "replace old=#{inspect e0} new=#{inspect e1}"; e1; (e0) -> e0 end)
-      false -> [e1| q]
-    end
-    #[e1| q]
+  def addwp(q, {v1, w, cons, prev}) do
+    :gb_sets.add({w, {v1, cons, prev}}, q)
   end
   
   def neighbors(g, u, {steps, pdir} = _cons) do

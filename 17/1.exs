@@ -7,7 +7,7 @@ defmodule AOC23.D17 do
   def run(input) do
     {size, g} =
       parse(input)
-      #|> IO.inspect(limit: :infinity)
+      # |> IO.inspect(limit: :infinity)
     
     s = source(size)
     t = target(size)
@@ -16,32 +16,45 @@ defmodule AOC23.D17 do
   end
 
   def distance(g, from, to) do
-    {dist, _prev} = distances(g, from, to)
+    {dist, prev} = distances(g, from, to)
     #|> IO.inspect(limit: :infinity)
-
+    trail(prev, from, to, [to])
+    |> IO.inspect
     dist[to]
   end
 
+  def trail(_m, to, to, acc) do
+    acc
+  end
+  def trail(m, from, to, acc) do
+    p = m[to]
+    trail(m, from, p, [p| acc])
+  end
+  
   def distances(g, from, to) do
-    distances(g, to, [{from, 0}], %{from => 0}, %{})
+    # TODO: Initialize steps and direction
+    distances(g, to, [{from, 0, {3, {0, 0}}, {0, 0}}], %{from => 0}, %{})
   end
 
   def distances(_g, _t, [], dist, prev) do
     {dist, prev}
   end
   def distances(g, t, q0, dist, prev) do
-    {u, q} = min(q0)
+    {{u, _w, cons, _from}, q} = min(q0)
+    #|> IO.inspect
+
     case t == u do
       true ->
         {dist, prev}
       false ->
-        ns = neighbors(g, u, 0, nil)
+        ns = neighbors(g, u, cons)
         {dist1, prev1, q1} =
           Enum.reduce(ns, {dist, prev, q},
-            fn({v, w}, {d, p, q}) ->
+            fn({v, w, cons}, {d, p, q}) ->
               alt = d[u] + w
               case alt < d[v] do
-                true  -> {Map.put(d, v, alt), Map.put(p, v, u), [{v, alt}| q]} # TODO: Use proper priority queue
+                # TODO: Use proper priority queue
+                true  -> {Map.put(d, v, alt), Map.put(p, v, u), addwp(q, {v, alt, cons, u})}
                 false -> {d, p, q}
               end
             end)
@@ -51,14 +64,30 @@ defmodule AOC23.D17 do
 
   def min(q) do
     # TODO: Use proper priority queue
-    {u, w} = Enum.min(q)
-    {u, q -- [{u, w}]}
+    u = Enum.min(q)
+    {u, q -- [u]}
+  end
+
+  def addwp(q, {v1, _w, _cons, _u} = e1) do
+    # TODO: Use proper priority queue
+    case Enum.any?(q, fn({v0, _, _, _}) -> v1 == v0 end) do
+      true  -> Enum.map(q, fn({^v1, _, _, _}) -> e1; (e0) -> e0 end)
+      false -> [e1| q]
+    end
   end
   
-  def neighbors(g, u, _steps, _direction) do
-    # TODO: Take steps and direction into account
-    {_w, ns} = Map.get(g, u)
-    Enum.map(ns, fn(n) -> {w, _ns} = Map.get(g, n); {n, w} end)
+  def neighbors(g, u, {steps, pdir} = _cons) do
+    {_w, ns} = Map.get(g, u) # fetch u's neighbors
+    Enum.map(ns, fn({d, n}) ->
+      {w, _ns} = Map.get(g, n)
+      # cdir = vsub(u, n)
+      case pdir == d do
+        true  -> {n, w, {steps - 1, d}}
+        false -> {n, w, {3, d}}
+      end
+    end)
+    # filter out neighbours that are unreachable due to constraint
+    |> Enum.filter(fn({_n, _w, {s, _d}}) -> s > 0 end)
   end
   
   def source({{i, _}, {j, _}}), do: {i, j}
@@ -87,11 +116,14 @@ defmodule AOC23.D17 do
     |> Enum.with_index(fn(e, idx) -> {{n, idx + 1}, {String.to_integer(e), neighbors({n, idx + 1})}} end)
   end
 
-  def neighbors(p), do: Enum.map([@up, @down, @left, @right], &(vadd(p, &1)))
+  #def neighbors(p), do: Enum.map([@up, @down, @left, @right], &(vadd(p, &1)))
+  def neighbors(p), do: Enum.map([@up, @down, @left, @right], &({&1, vadd(p, &1)}))
 
   def vadd({i1, j1}, {i2, j2}), do: {i1 + i2, j1 + j2}
+  def vsub({i1, j1}, {i2, j2}), do: {i2 - i1, j2 - j1}
 
-  def validn?(m, n), do: Map.get(m, n, nil) != nil
+  #def validn?(m, n), do: Map.get(m, n, nil) != nil
+  def validn?(m, {_, n}), do: Map.get(m, n, nil) != nil
 end
 
 

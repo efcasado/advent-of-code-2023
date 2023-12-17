@@ -42,16 +42,18 @@ defmodule AOC23.D17 do
   def distances(g, t, q0, dist, prev) do
     {{u, _w, cons, _from}, q} = min(q0)
     #|> IO.inspect
-
-    case t == u do
-      true ->
-        {dist, prev}
-      false ->
+    #IO.puts "u=#{inspect u}"
+    
+    #case t == u do
+    #  true ->
+    #    {dist, prev}
+    #  false ->
         ns = neighbors(g, u, cons)
         {dist1, prev1, q1} =
           Enum.reduce(ns, {dist, prev, q},
             fn({v, w, cons}, {d, p, q}) ->
               alt = d[u] + w
+              #IO.puts "v=#{inspect v} | d[u]=#{d[u]} w=#{w} d[v]=#{inspect d[v]} | #{alt}"
               case alt < d[v] do
                 # TODO: Use proper priority queue
                 true  -> {Map.put(d, v, alt), Map.put(p, v, u), addwp(q, {v, alt, cons, u})}
@@ -59,35 +61,48 @@ defmodule AOC23.D17 do
               end
             end)
         distances(g, t, q1, dist1, prev1)
-    end
+    #end
   end
 
   def min(q) do
     # TODO: Use proper priority queue
-    u = Enum.min(q)
+    #IO.puts "Q | q=#{inspect q}"
+    # fetch the element with the minimum weight
+    u = Enum.min(q, fn({_, w1, _, _}, {_, w2, _, _}) -> w1 <= w2 end)
+    {e, _, _, _} = u
+    #IO.puts "Q | min=#{inspect e}"
     {u, q -- [u]}
   end
 
+  # node = pos, weight, constraint, prev pos
   def addwp(q, {v1, _w, _cons, _u} = e1) do
+    #IO.puts "adding #{inspect v1} to #{inspect q}"
     # TODO: Use proper priority queue
     case Enum.any?(q, fn({v0, _, _, _}) -> v1 == v0 end) do
-      true  -> Enum.map(q, fn({^v1, _, _, _}) -> e1; (e0) -> e0 end)
+      true  ->
+        Enum.map(q, fn({^v1, _, _, _} = e0) -> IO.puts "replace old=#{inspect e0} new=#{inspect e1}"; e1; (e0) -> e0 end)
       false -> [e1| q]
     end
+    #[e1| q]
   end
   
   def neighbors(g, u, {steps, pdir} = _cons) do
     {_w, ns} = Map.get(g, u) # fetch u's neighbors
+    xxx =
     Enum.map(ns, fn({d, n}) ->
       {w, _ns} = Map.get(g, n)
-      # cdir = vsub(u, n)
+      #cdir = vsub(u, n)
       case pdir == d do
         true  -> {n, w, {steps - 1, d}}
         false -> {n, w, {3, d}}
       end
     end)
     # filter out neighbours that are unreachable due to constraint
+    #|> IO.inspect
     |> Enum.filter(fn({_n, _w, {s, _d}}) -> s > 0 end)
+    #|> IO.inspect
+    #IO.puts "u=#{inspect u} ns=#{inspect xxx}"
+    xxx
   end
   
   def source({{i, _}, {j, _}}), do: {i, j}

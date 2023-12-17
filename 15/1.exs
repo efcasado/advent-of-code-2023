@@ -11,9 +11,9 @@ defmodule AOC23.D15 do
       line
       |> String.trim
       |> String.split(",", trim: true)
-      |> IO.inspect
+      #|> IO.inspect
       |> Enum.map(&(hash(&1, 0)))
-      |> IO.inspect
+      #|> IO.inspect
       |> Enum.sum
     end)
   end

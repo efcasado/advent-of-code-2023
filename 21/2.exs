@@ -5,23 +5,84 @@ defmodule AOC23.D21 do
   @right { 0,  1}
   @directions [@up, @down, @left, @right]
 
+  # sample_input 11x11
+  # w 11
+  # new grids at round(w / 2) + 1 = 6
+  # 1  ->  2  (2) 0
+  # 2  ->  4  (4) 0
+  # 3  ->  6  (6) 0
+  # 4  ->  9  (9) 0
+  # ...
+  # 6  -> 16 (16) 0
+  # 7  -> 21 (22) 1
+  # ...
+  # 13 -> 39 (89) 50
+  # 14 -> 42 (99) 57
+  #
+  # input 131x131
+  # w 131
+  # new grids at round(w / 2) + 1 = 66
+  # 1  ->    4    (4)
+  # 2  ->    8    (8)
+  # 3  ->   16   (16)
+  # 4  ->   24   (24)
+  # ...
+  # 65 -> 3944 (3944)
+  # 66 -> 4076 (4076)
+  # 67 -> 4200 (4212)
   def run(input) do
     {size, start, m} = parse(input)
     #|> IO.inspect(limit: :infinity)
 
-    #bfs(size, m, [{start, 0}], 100, MapSet.new())
-    xxx(size, m, start, 1, 50, 0)
-    #|> IO.inspect
-    |> Enum.count
+    # bfs(size, m, [{start, 0}], 16, MapSet.new())
+    # |> enclosed(size)
+    # |> IO.inspect
+    # |> Enum.count
+    # |> IO.inspect
+    
+    xxx(size, m, start, 1, 64, [])
+    |> Enum.with_index(fn(x, idx) -> {idx + 1, Enum.count(enclosed(x, size)), Enum.count(x), div(Enum.count(x), 39), div(Enum.count(x), 42), grids(x, size)} end)
+    |> IO.inspect(limit: :infinity)
+    #|> diff(0, [])
+    #|> IO.inspect(limit: :infinity)
+    #|> diff(0, [])
+    #|> IO.inspect(limit: :infinity)
+    #|> Enum.count
+    
+    0
   end
 
-  def xxx(steps, prev, limit) when steps > limit do
-    :ok
+  def enclosed(xs, {{i0, i1}, {j0, j1}}) do
+    Enum.filter(xs, fn({i, j}) -> i >= i0 and i <= i1 and j >= j0 and j <= j1 end)
   end
-  def xxx(size, m, start, current, limit, prev) do
+
+  def grids(xs, {{_, max_i}, {_, max_j}}) do
+    is = Enum.map(xs, fn({i, _}) -> i end)
+    js = Enum.map(xs, fn({i, _}) -> i end)
+    i0 = Enum.min(is)
+    i1 = Enum.max(is)
+    j0 = Enum.min(js)
+    j1 = Enum.max(js)
+    abs(floor((i0 - max_i) / max_i)) + floor(i1 / max_i) + abs(floor((j0 - max_j) / max_j)) + floor(j1 / max_j)
+  end
+  
+  def diff([], _prev, acc) do
+    Enum.reverse(acc)
+  end
+  def diff([x| xs], prev, acc) do
+    diff(xs, x, [x - prev| acc])
+  end
+  
+  def xxx(_size, _m, _start, steps, limit, acc) when steps > limit do
+    Enum.reverse(acc)
+  end
+  def xxx(size, m, start, current, limit, acc) do
     res = bfs(size, m, [{start, 0}], current, MapSet.new())
-    IO.puts "diff = #{res - prev}"
-    xxx(size, m, start, current + 1, limit, res - prev)
+    #|> enclosed(size)
+    #|> Enum.count
+
+    #IO.puts "steps=#{current} res=#{res} diff=#{res - prev}"
+    xxx(size, m, start, current + 1, limit, [res| acc])
   end
   
   def find_cycle(x0, f) do
@@ -45,7 +106,9 @@ defmodule AOC23.D21 do
   end
   
   def bfs(_size, _m, [{_p, s}| _], limit, seen) when s > limit do
-    Enum.count(Enum.filter(seen, fn({_p, s}) -> s == limit end))
+    seen
+    |> Enum.filter(fn({_p, s}) -> s == limit end)
+    |> Enum.map(fn({p, _s}) -> p end)
   end
   def bfs(size, m, [{p, s} = n| ns0], limit, seen) do
     case MapSet.member?(seen, n) do

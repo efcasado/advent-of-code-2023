@@ -1,39 +1,33 @@
 defmodule AOC23.D22 do
   def run(input) do
-    _bricks = parse(input)
+    bricks = parse(input)
     |> Enum.sort_by(fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
     # |> IO.inspect
     |> fall
-    |> IO.inspect
-    |> removable
-    |> IO.inspect(limit: :infinity)
+    # |> IO.inspect
+
+    supporters = bricks
+    |> supporters
+    # |> IO.inspect(limit: :infinity)
+
+    bricks -- supporters
+    # |> IO.inspect
     |> Enum.count
   end
 
-  def removable(bricks) do
-    _removable(bricks, bricks, [])
+  def supporters(bricks) do
+    _supporters(bricks, bricks, [])
   end
 
-  def _removable([], _all, acc) do
+  def _supporters([], _all, acc) do
     Enum.uniq(acc)
   end
-  def _removable([{id, _} = b| bs1], all, acc) do
-    # supports no one
-    x =
-      case Enum.filter(all, fn(b2) -> supports?(b, b2) end) do
-        [] -> [b] # _removable(bs1, all, [b| acc])
-        _  -> []  #_removable(bs1, all, acc)
-      end
-
-    # supported by multiple
-    y =
-      case Enum.filter(all, fn(b2) -> supported?(b, b2) end) do
-        []  -> [] # _removable(bs1, all, acc)
-        [_] -> [] # _removable(bs1, all, acc)
-        bs2 -> bs2 # _removable(bs1, all, bs2 ++ acc)
-      end
-
-    _removable(bs1, all, x ++ y ++ acc)
+  def _supporters([b| bs1], all, acc) do
+    case Enum.filter(all, fn(b2) -> supported?(b, b2) end) do
+      []   -> _supporters(bs1, all, acc)
+      [b3] -> _supporters(bs1, all, [b3| acc])
+      _    -> _supporters(bs1, all, acc)
+    end
   end
 
   def supported?({id, _}, {id, _}) do
@@ -41,13 +35,6 @@ defmodule AOC23.D22 do
   end
   def supported?({_id1, {x1, y1, {z11, z12}}}, {_id2, {x2, y2, {z21, z22}}}) do
     (z11 == z21 + 1 or z12 == z22 + 1) and overlap?(x1, x2) and overlap?(y1, y2)
-  end
-
-  def supports?({id, _}, {id, _}) do
-    false
-  end
-  def supports?({_id1, {x1, y1, {z11, z12}}}, {_id2, {x2, y2, {z21, z22}}}) do
-    (z11 + 1 == z21 or z12 + 1 == z22) and overlap?(x1, x2) and overlap?(y1, y2)
   end
 
   def fall(bs, acc \\ [])

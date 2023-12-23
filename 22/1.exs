@@ -42,7 +42,7 @@ defmodule AOC23.D22 do
     Enum.sort_by(acc, fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
   end
   def fall([{id, {x, y, z}} = b1| bs1], acc) do
-    case Enum.filter(acc, fn(b2) -> atop?(b1, b2) end) do
+    case Enum.filter(acc, fn(b2) -> above?(b1, b2) end) do
       []  -> fall(bs1, [{id, {x, y, {1, 1}}}| acc])
       bs2 ->
         {z1, z2} = adjust_z(bs2, z)
@@ -61,10 +61,10 @@ defmodule AOC23.D22 do
     {z1, z1 + diff}
   end
 
-  def atop?({id, _}, {id, _}) do
+  def above?({id, _}, {id, _}) do
     false
   end
-  def atop?({_id1, {x1, y1, {z11, z12}}}, {_id2, {x2, y2, {z21, z22}}}) do
+  def above?({_id1, {x1, y1, {z11, z12}}}, {_id2, {x2, y2, {z21, z22}}}) do
     (z11 > z21 or z12 > z22) and overlap?(x1, x2) and overlap?(y1, y2)
   end
 

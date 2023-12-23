@@ -1,13 +1,25 @@
 defmodule AOC23.D22 do
   def run(input) do
     bricks = parse(input)
-    |> IO.inspect(limit: :infinity)
+    #|> IO.inspect(limit: :infinity)
+    |> Enum.sort_by(fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
+    |> IO.inspect
+    #|> fall
 
     0
   end
 
+  def fall([_]) do
+    :ok
+  end
+  def fall([a, b| xs]) do
+    atop?(b, a)
+    |> IO.inspect
+    fall([b| xs])
+  end
+
   def atop?({_id1, {x1, y1, _z1}}, {_id2, {x2, y2, _z2}}) do
-    overlap?(x1, x2) or overlap?(y1, y2)
+    overlap?(x1, x2) and overlap?(y1, y2)
   end
 
   def overlap?({a1, a2}, {b1, b2}), do: not Range.disjoint?(a1..a2, b1..b2)

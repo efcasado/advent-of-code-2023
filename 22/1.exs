@@ -5,9 +5,9 @@ defmodule AOC23.D22 do
     |> Enum.sort_by(fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
     #|> IO.inspect
     |> fall
-    |> IO.inspect
+    #|> IO.inspect
     |> removable
-    |> IO.inspect
+    |> IO.inspect(limit: :infinity)
     |> Enum.count
   end
 

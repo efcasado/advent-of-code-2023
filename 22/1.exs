@@ -1,6 +1,6 @@
 defmodule AOC23.D22 do
   def run(input) do
-    _ = parse(input)
+    bricks = parse(input)
     |> IO.inspect(limit: :infinity)
 
     0
@@ -31,11 +31,9 @@ defmodule AOC23.D22 do
 
 
   def id(n, size) do
-    _id(n, size, List.duplicate(65, size))
-  end
-
-  def _id(_n, _size, acc) do
-    to_string(acc)
+    (size - 1)..0
+    |> Enum.map(&(rem(div(n, 25**&1), 25)) + 65)
+    |> to_string
   end
 end
 

@@ -4,7 +4,7 @@ defmodule AOC23.D22 do
     |> Enum.sort_by(fn({id, {_x, _y, {z1, z2}}}) -> {{z1, z2}, id} end)
     # |> IO.inspect
     |> fall
-    |> IO.inspect(limit: :infinity)
+    # |> IO.inspect(limit: :infinity)
 
     critical = bricks
     |> critical
@@ -14,6 +14,7 @@ defmodule AOC23.D22 do
     # |> IO.inspect
     |> Enum.count
   end
+
 
   def critical(bricks) do
     _critical(bricks, bricks, [])
@@ -34,7 +35,7 @@ defmodule AOC23.D22 do
     false
   end
   def supported?({_id1, {x1, y1, {z11, z12}}}, {_id2, {x2, y2, {z21, z22}}}) do
-    (z11 == z21 + 1 or z12 == z22 + 1) and overlap?(x1, x2) and overlap?(y1, y2)
+    (z11 == z21 + 1 or z11 == z22 + 1 or z12 == z22 + 1 or z12 == z22 + 1) and overlap?(x1, x2) and overlap?(y1, y2)
   end
 
   def fall(bs, acc \\ [])

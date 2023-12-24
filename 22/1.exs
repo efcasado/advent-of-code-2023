@@ -4,7 +4,7 @@ defmodule AOC23.D22 do
     |> Enum.sort_by(fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
     # |> IO.inspect
     |> fall
-    # |> IO.inspect
+    |> IO.inspect(limit: :infinity)
 
     supporters = bricks
     |> supporters
@@ -43,13 +43,20 @@ defmodule AOC23.D22 do
   end
   def fall([{id, {x, y, z}} = b1| bs1], acc) do
     case Enum.filter(acc, fn(b2) -> above?(b1, b2) end) do
-      []  -> fall(bs1, [{id, {x, y, {1, 1}}}| acc])
+      []  ->
+        {z1, z2} = adjust_z([], z)
+        fall(bs1, [{id, {x, y, {z1, z2}}}| acc])
       bs2 ->
         {z1, z2} = adjust_z(bs2, z)
         fall(bs1, [{id, {x, y, {z1, z2}}}| acc])
     end
   end
 
+  def adjust_z([], {z1, z2}) do
+    diff = z2 - z1
+
+    {1, 1 + diff}
+  end
   def adjust_z(bs, {z1, z2}) do
     diff = z2 - z1
 

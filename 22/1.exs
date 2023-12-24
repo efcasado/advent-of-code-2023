@@ -1,32 +1,32 @@
 defmodule AOC23.D22 do
   def run(input) do
     bricks = parse(input)
-    |> Enum.sort_by(fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
+    |> Enum.sort_by(fn({id, {_x, _y, {z1, z2}}}) -> {{z1, z2}, id} end)
     # |> IO.inspect
     |> fall
     |> IO.inspect(limit: :infinity)
 
-    supporters = bricks
-    |> supporters
+    critical = bricks
+    |> critical
     # |> IO.inspect(limit: :infinity)
 
-    bricks -- supporters
+    bricks -- critical
     # |> IO.inspect
     |> Enum.count
   end
 
-  def supporters(bricks) do
-    _supporters(bricks, bricks, [])
+  def critical(bricks) do
+    _critical(bricks, bricks, [])
   end
 
-  def _supporters([], _all, acc) do
+  def _critical([], _all, acc) do
     Enum.uniq(acc)
   end
-  def _supporters([b| bs1], all, acc) do
+  def _critical([b| bs1], all, acc) do
     case Enum.filter(all, fn(b2) -> supported?(b, b2) end) do
-      []   -> _supporters(bs1, all, acc)
-      [b3] -> _supporters(bs1, all, [b3| acc])
-      _    -> _supporters(bs1, all, acc)
+      []   -> _critical(bs1, all, acc)
+      [b3] -> _critical(bs1, all, [b3| acc])
+      _    -> _critical(bs1, all, acc)
     end
   end
 
@@ -39,7 +39,7 @@ defmodule AOC23.D22 do
 
   def fall(bs, acc \\ [])
   def fall([], acc) do
-    Enum.sort_by(acc, fn({_, {_x, _y, {z1, z2}}}) -> {z1, z2} end)
+    Enum.sort_by(acc, fn({id, {_x, _y, {z1, z2}}}) -> {{z1, z2}, id} end)
   end
   def fall([{id, {x, y, z}} = b1| bs1], acc) do
     case Enum.filter(acc, fn(b2) -> above?(b1, b2) end) do

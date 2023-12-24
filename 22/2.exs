@@ -6,13 +6,23 @@ defmodule AOC23.D22 do
     |> fall
     # |> IO.inspect(limit: :infinity)
 
-    {supports, critical} = bricks
+    critical = bricks
     |> critical
-    |> IO.inspect(limit: :infinity)
+    # |> IO.inspect(limit: :infinity)
 
-    # heights = heights_map(bricks)
-    # xxx(heights, bricks, critical, 0)
-    Enum.reduce(critical, 0, fn(c, acc) -> Enum.count(chain(supports, [c], [])) + acc end)
+    moves(bricks, critical)
+  end
+
+  def moves(bricks, critical) do
+    heights = heights_map(bricks)
+
+    pmap(critical, &(_moves(heights, bricks, &1)))
+    |> Enum.sum
+  end
+
+  def pmap(xs, fun) do
+    Task.async_stream(xs, fn(x) -> fun.(x) end, timeout: :infinity)
+    |> Enum.map(fn({:ok, res}) -> res end)
   end
 
   def heights_map(bricks) do
@@ -21,42 +31,26 @@ defmodule AOC23.D22 do
     |> Map.new
   end
 
-  def xxx(_heights, _bricks, [], acc) do
-    acc
-  end
-  def xxx(heights0, bricks, [c| cs], acc) do
-    heights1 = bricks -- [c]
+
+  def _moves(heights0, bricks, c) do
+    bricks -- [c]
     |> fall
     |> heights_map()
-
-    moves = heights1
     |> Enum.filter(fn({k, v}) -> heights0[k] != v end)
     |> Enum.count
-
-    xxx(heights0, bricks, cs, moves + acc)
-  end
-
-  def chain(m, k, acc) do
-    case m[k] do
-      nil -> List.flatten(acc)
-      v   -> chain(m, v, [v| acc])
-    end
   end
 
   def critical(bricks) do
-    _critical(bricks, bricks, [], [])
+    _critical(bricks, bricks, [])
   end
 
-  def _critical([], _all, acc1, acc2) do
-    acc2 = Enum.uniq(acc2)
-    acc1 = Enum.reduce(acc1, %{}, fn({id, ids}, acc) -> Map.update(acc, id, ids, fn(ids0) -> ids ++ ids0 end) end)
-    {acc1, acc2}
+  def _critical([], _all, acc) do
+    Enum.uniq(acc)
   end
-  def _critical([{id1, _} = b| bs1], all, acc1, acc2) do
+  def _critical([b| bs1], all, acc) do
     case Enum.filter(all, fn(b2) -> supported?(b, b2) end) do
-      []         -> _critical(bs1, all, acc1, acc2)
-      [{id2, _}] -> _critical(bs1, all, [{[id2], [id1]}| acc1], [id2| acc2])
-      xxx        -> _critical(bs1, all, [{Enum.map(xxx, fn({id, _}) -> id end), [id1]}| acc1], acc2)
+      [b3]       -> _critical(bs1, all, [b3| acc])
+      _          -> _critical(bs1, all, acc)
     end
   end
 

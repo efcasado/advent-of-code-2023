@@ -30,9 +30,9 @@ defmodule AOC23.D23 do
     |> Enum.reduce({{{-1, -1}, []}, []},
     fn
       ({{i, j}, ns}, {{{i, j0}, _}, [h| t]}) when j == (j0 + 1) ->
-        {{{i, j}, ns}, [ns ++ h| t]}
+        {{{i, j}, ns}, [Enum.map(ns, fn({_w, n}) -> n end) ++ h| t]}
       ({{i, j}, ns}, {_, acc}) ->
-        {{{i, j}, ns}, [[{i, j}] ++ ns|acc]}
+        {{{i, j}, ns}, [[{i, j}] ++ Enum.map(ns, fn({_w, n}) -> n end)|acc]}
     end)
     #|> IO.inspect(limit: :infinity)
 
@@ -40,15 +40,15 @@ defmodule AOC23.D23 do
     |> Enum.reject(&(Enum.count(&1) == 3))
     #|> IO.inspect
     |> Enum.map(&({Enum.min(&1), Enum.max(&1)}))
-    |> IO.inspect
+    #|> IO.inspect
     |> Enum.reduce(grid, fn({{i, j0}, {i, j1}}, grid) ->
       (j0 + 1)..(j1 - 1)
       |> Enum.reduce(grid, &(Map.delete(&2, {i, &1})))
       |> Map.update({i, j0}, nil, fn(ns) ->
-        (ns -- [vadd({i, j0}, @right)]) ++ [{i, j1}]
+        (ns -- [{1, vadd({i, j0}, @right)}]) ++ [{j1 - j0, {i, j1}}]
       end)
       |> Map.update({i, j1}, nil, fn(ns) ->
-        (ns -- [vadd({i, j1}, @left)]) ++ [{i, j0}]
+        (ns -- [{1, vadd({i, j1}, @left)}]) ++ [{j1 - j0, {i, j0}}]
       end)
     end)
   end
@@ -62,9 +62,9 @@ defmodule AOC23.D23 do
     |> Enum.reduce({{{-1, -1}, []}, []},
     fn
       ({{i, j}, ns}, {{{i0, j}, _}, [h| t]}) when i == (i0 + 1) ->
-        {{{i, j}, ns}, [ns ++ h| t]}
+        {{{i, j}, ns}, [Enum.map(ns, fn({_w, n}) -> n end) ++ h| t]}
       ({{i, j}, ns}, {_, acc}) ->
-        {{{i, j}, ns}, [[{i, j}] ++ ns|acc]}
+        {{{i, j}, ns}, [[{i, j}] ++ Enum.map(ns, fn({_w, n}) -> n end)|acc]}
     end)
     #|> IO.inspect(limit: :infinity)
 
@@ -72,21 +72,21 @@ defmodule AOC23.D23 do
     |> Enum.reject(&(Enum.count(&1) == 3))
     #|> IO.inspect
     |> Enum.map(&({Enum.min(&1), Enum.max(&1)}))
-    |> IO.inspect
+    #|> IO.inspect
     |> Enum.reduce(grid, fn({{i0, j}, {i1, j}}, grid) ->
       (i0 + 1)..(i1 - 1)
       |> Enum.reduce(grid, &(Map.delete(&2, {&1, j})))
       |> Map.update({i0, j}, nil, fn(ns) ->
-        (ns -- [vadd({i0, j}, @down)]) ++ [{i1, j}]
+        (ns -- [{1, vadd({i0, j}, @down)}]) ++ [{i1 - i0, {i1, j}}]
       end)
       |> Map.update({i1, j}, nil, fn(ns) ->
-        (ns -- [vadd({i1, j}, @up)]) ++ [{i1, j}]
+        (ns -- [{1, vadd({i1, j}, @up)}]) ++ [{i1 - i0, {i1, j}}]
       end)
     end)
   end
 
-  def xcompressable?({k, ns}), do: [vadd(k, @left), vadd(k, @right)] == ns
-  def ycompressable?({k, ns}), do: [vadd(k,   @up), vadd(k,  @down)] == ns
+  def xcompressable?({k, ns}), do: [{1, vadd(k, @left)}, {1, vadd(k, @right)}] == ns
+  def ycompressable?({k, ns}), do: [{1, vadd(k,   @up)}, {1, vadd(k,  @down)}] == ns
 
   def longest(_m,                      [], _target, acc) do
     acc
@@ -99,8 +99,8 @@ defmodule AOC23.D23 do
   def longest(m,  [{x, steps,  seen}| xs],  target, acc) do
     seen = MapSet.put(seen, x)
     ns = m[x]
-    |> Enum.reject(&(MapSet.member?(seen, &1)))
-    |> Enum.map(&({&1, steps + 1, seen}))
+    |> Enum.reject(fn({_w, n}) -> MapSet.member?(seen, n) end)
+    |> Enum.map(fn({w, n}) -> {n, steps + w, seen} end)
     longest(m, ns ++ xs, target, acc)
   end
 
@@ -114,7 +114,7 @@ defmodule AOC23.D23 do
     end)
 
     m0 = Map.new(rs)
-    m1 = Map.new(Enum.map(m0, fn({k, ns}) -> {k, Enum.filter(ns, &(validn?(m0, &1)))} end))
+    m1 = Map.new(Enum.map(m0, fn({k, ns}) -> {k, Enum.filter(ns, fn({_w, n}) -> validn?(m0, n) end)} end))
 
     {start, _} = Enum.at(rs, -1)
     {finish, _} = Enum.at(rs, 0)
@@ -138,7 +138,7 @@ defmodule AOC23.D23 do
     end)
   end
 
-  def neighbors(p), do: Enum.map(@directions, &(vadd(p, &1)))
+  def neighbors(p), do: Enum.map(@directions, &({1, vadd(p, &1)}))
 
   def vadd({i1, j1}, {i2, j2}), do: {i1 + i2, j1 + j2}
 end

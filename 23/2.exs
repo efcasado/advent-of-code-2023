@@ -11,7 +11,7 @@ defmodule AOC23.D23 do
 
     grid = compress(grid)
 
-    longest(grid, [{start, 0, MapSet.new()}], finish, [])
+    longest(grid, [{start, 0, MapSet.new()}], finish, -1)
   end
 
   def compress(grid) do
@@ -88,20 +88,19 @@ defmodule AOC23.D23 do
   def xcompressable?({k, ns}), do: [{1, vadd(k, @left)}, {1, vadd(k, @right)}] == ns
   def ycompressable?({k, ns}), do: [{1, vadd(k,   @up)}, {1, vadd(k,  @down)}] == ns
 
-  def longest(_m,                      [], _target, acc) do
-    acc
-    # |> IO.inspect
-    |> Enum.max
+  def longest(_m,                      [], _target, max) do
+    max
   end
-  def longest(m,  [{x, steps, _seen}| xs],       x, acc) do
-    longest(m, xs, x, [steps| acc])
+  def longest(m,  [{x, steps, _seen}| xs],       x, max) do
+    longest(m, xs, x, max(steps, max))
   end
-  def longest(m,  [{x, steps,  seen}| xs],  target, acc) do
+  def longest(m,  [{x, steps,  seen}| xs],  target, max) do
+    #IO.puts "A"
     seen = MapSet.put(seen, x)
     ns = m[x]
     |> Enum.reject(fn({_w, n}) -> MapSet.member?(seen, n) end)
     |> Enum.map(fn({w, n}) -> {n, steps + w, seen} end)
-    longest(m, ns ++ xs, target, acc)
+    longest(m, ns ++ xs, target, max)
   end
 
   def parse(input) do

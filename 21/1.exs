@@ -57,7 +57,7 @@ defmodule AOC23.D21 do
     |> Enum.with_index(fn("S", idx) -> idx + 1; (_, _) -> nil end)
     |> Enum.reject(fn(e) -> e == nil end)
   end
-  
+
   def l2cs(line, n) do
     line
     |> String.trim
